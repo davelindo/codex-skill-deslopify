@@ -1,0 +1,4 @@
+interface:
+  display_name: "Desloppify Auditor"
+  short_description: "Parallel code-health audit for existing repos."
+  default_prompt: "Use $desloppify-code-health-auditor to audit this repository and return a deduplicated, prioritized findings report."
