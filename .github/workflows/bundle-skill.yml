@@ -1,0 +1,58 @@
+name: Bundle Skill
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "desloppify-code-health-auditor/**"
+      - ".github/workflows/bundle-skill.yml"
+      - "README.md"
+  pull_request:
+    paths:
+      - "desloppify-code-health-auditor/**"
+      - ".github/workflows/bundle-skill.yml"
+      - "README.md"
+
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    name: Bundle Skill Artifact
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify skill structure
+        run: |
+          set -euo pipefail
+          test -f desloppify-code-health-auditor/SKILL.md
+          test -f desloppify-code-health-auditor/agents/openai.yaml
+          test -d desloppify-code-health-auditor/scripts
+          test -d desloppify-code-health-auditor/references
+
+      - name: Bundle skill
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          zip -r dist/desloppify-code-health-auditor.zip desloppify-code-health-auditor \
+            -x "desloppify-code-health-auditor/runs/*" \
+            -x "desloppify-code-health-auditor/**/__pycache__/*" \
+            -x "desloppify-code-health-auditor/**/*.pyc"
+
+      - name: Show bundle contents
+        run: |
+          set -euo pipefail
+          ls -lh dist
+          unzip -l dist/desloppify-code-health-auditor.zip | sed -n '1,120p'
+
+      - name: Upload bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: desloppify-code-health-auditor-bundle
+          path: dist/desloppify-code-health-auditor.zip
+          if-no-files-found: error
+          retention-days: 14
