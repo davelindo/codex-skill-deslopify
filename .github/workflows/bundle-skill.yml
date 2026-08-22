@@ -5,54 +5,81 @@ on:
   push:
     branches:
       - main
+    tags:
+      - "v*"
     paths:
-      - "desloppify-code-health-auditor/**"
+      - "desloppify/**"
       - ".github/workflows/bundle-skill.yml"
+      - ".gitignore"
       - "README.md"
   pull_request:
     paths:
-      - "desloppify-code-health-auditor/**"
+      - "desloppify/**"
       - ".github/workflows/bundle-skill.yml"
+      - ".gitignore"
       - "README.md"
 
 permissions:
   contents: read
 
+env:
+  SKILL_RELEASE: "1.0.0"
+  DESLOPPIFY_RELEASE: "1.0"
+
 jobs:
   bundle:
-    name: Bundle Skill Artifact
+    name: Validate and Bundle Skill
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Verify skill structure
+      - name: Validate skill structure
         run: |
           set -euo pipefail
-          test -f desloppify-code-health-auditor/SKILL.md
-          test -f desloppify-code-health-auditor/agents/openai.yaml
-          test -d desloppify-code-health-auditor/scripts
-          test -d desloppify-code-health-auditor/references
+          skill_file="desloppify/SKILL.md"
+          metadata_file="desloppify/agents/openai.yaml"
+          pinned_source="peteromallet/desloppify.git@v${DESLOPPIFY_RELEASE}"
+          test -f "$skill_file"
+          test -f "$metadata_file"
+          test -f "desloppify/references/recovery.md"
+          test -z "$(git ls-files 'desloppify-code-health-auditor/**')"
+          test ! -d desloppify/scripts
+          test "$(sed -n '2p' "$skill_file")" = "name: desloppify"
+          test "$(grep -Fc "$pinned_source" "$skill_file")" = "2"
+          grep -Fq 'Use $desloppify' "$metadata_file"
+          grep -Fq "<!-- desloppify-skill-release: ${SKILL_RELEASE} -->" "$skill_file"
+          grep -Fq "<!-- upstream-desloppify-release: ${DESLOPPIFY_RELEASE} -->" "$skill_file"
 
       - name: Bundle skill
         run: |
           set -euo pipefail
           mkdir -p dist
-          zip -r dist/desloppify-code-health-auditor.zip desloppify-code-health-auditor \
-            -x "desloppify-code-health-auditor/runs/*" \
-            -x "desloppify-code-health-auditor/**/__pycache__/*" \
-            -x "desloppify-code-health-auditor/**/*.pyc"
+          zip -r "dist/desloppify-skill-v${SKILL_RELEASE}.zip" desloppify \
+            -x "*/.DS_Store" \
+            -x "*/.desloppify/*" \
+            -x "*/runs/*" \
+            -x "*/__pycache__/*" \
+            -x "*.pyc"
 
-      - name: Show bundle contents
+      - name: Verify bundle contents
         run: |
           set -euo pipefail
-          ls -lh dist
-          unzip -l dist/desloppify-code-health-auditor.zip | sed -n '1,120p'
+          bundle="dist/desloppify-skill-v${SKILL_RELEASE}.zip"
+          unzip -t "$bundle"
+          unzip -Z1 "$bundle" | grep -Fxq 'desloppify/SKILL.md'
+          unzip -Z1 "$bundle" | grep -Fxq 'desloppify/agents/openai.yaml'
+          unzip -Z1 "$bundle" | grep -Fxq 'desloppify/references/recovery.md'
+          if unzip -Z1 "$bundle" | grep -Eq '(^|/)(runs|scripts|\.desloppify|__pycache__)(/|$)|\.pyc$'; then
+            echo "Bundle contains a forbidden runtime or legacy path."
+            exit 1
+          fi
+          unzip -l "$bundle"
 
       - name: Upload bundle artifact
         uses: actions/upload-artifact@v4
         with:
-          name: desloppify-code-health-auditor-bundle
-          path: dist/desloppify-code-health-auditor.zip
+          name: desloppify-skill-v${{ env.SKILL_RELEASE }}
+          path: dist/desloppify-skill-v${{ env.SKILL_RELEASE }}.zip
           if-no-files-found: error
           retention-days: 14
