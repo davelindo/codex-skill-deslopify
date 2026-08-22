@@ -1,131 +1,132 @@
-# Codex Skill: Desloppify Code Health Auditor
+# Codex Skill: Desloppify
 
 [![Bundle Skill](https://github.com/davelindo/codex-skill-deslopify/actions/workflows/bundle-skill.yml/badge.svg)](https://github.com/davelindo/codex-skill-deslopify/actions/workflows/bundle-skill.yml)
-![Python](https://img.shields.io/badge/python-3.9%2B-blue)
+![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 
-Desloppify-style code health auditing skill for Codex.  
-It analyzes an existing repository with grouped subagents, then validates, deduplicates, scores, and prioritizes findings.
+A Codex skill for the real [Desloppify](https://github.com/peteromallet/desloppify)
+codebase-health workflow. It uses Desloppify for detection, persistent state,
+subjective review, triage, prioritization, resolution, and scoring.
 
-## What This Project Does
+The skill supports three outcomes:
 
-This repository packages a Codex skill named `desloppify-code-health-auditor` with:
+- A production-code read-only health audit
+- An ordered cleanup plan without execution
+- An explicitly authorized `scan -> plan -> execute -> rescan` improvement cycle
 
-- A strict read-only auditing contract (no builds, no scaffolding, no file edits unless explicitly requested)
-- Detector coverage for dead code, duplication, complexity, dependency coupling, naming consistency, and debug/log leftovers
-- Grouped, non-clobbering subagent planning
-- Deterministic findings validation and merge/score reporting
+## Why This Version Is Different
 
-Core skill definition:
+The earlier `desloppify-code-health-auditor` skill used a fixed detector list,
+custom JSON findings, and a synthetic score. Those components have been removed.
+The `$desloppify` skill now follows the actual CLI and treats `desloppify next`
+as the authoritative workflow queue.
 
-- [`desloppify-code-health-auditor/SKILL.md`](desloppify-code-health-auditor/SKILL.md)
+This is intentionally a breaking rename. There is no compatibility alias for
+`$desloppify-code-health-auditor`.
 
-## Why This Project Is Useful
+## Install
 
-- Produces a consistent audit report format across runs
-- Reduces subagent collisions with grouped execution and unique output paths
-- Normalizes severity/tier/confidence across heterogeneous detector outputs
-- Generates actionable next steps (top findings, remediation plan, resolve simulation commands)
-- Works with plain Python scripts and JSON artifacts
-
-## Project Layout
-
-```text
-desloppify-code-health-auditor/
-├── SKILL.md
-├── agents/openai.yaml
-├── references/grouped-subagent-prompts.md
-└── scripts/
-    ├── repo_profile.py
-    ├── grouped_subagent_plan.py
-    ├── validate_findings.py
-    └── merge_and_score.py
-```
-
-## Getting Started
-
-### Prerequisites
-
-- Python 3.9+
-- A repository to audit
-- A Codex environment that can run subagents (for full workflow)
-
-### Install for Codex
-
-Clone this repository and place the skill folder where your Codex instance loads skills (commonly `$CODEX_HOME/skills`):
+Make the `desloppify/` directory available in the Codex skills path, commonly
+`$CODEX_HOME/skills`:
 
 ```bash
 git clone git@github.com:davelindo/codex-skill-deslopify.git
 cd codex-skill-deslopify
+cp -R desloppify "${CODEX_HOME:?Set CODEX_HOME}/skills/desloppify"
 ```
 
-Then make sure the `desloppify-code-health-auditor/` directory is available in your Codex skills path.
+The skill prefers an installed `desloppify` executable. If it is unavailable,
+or does not report version 1.0, it directs Codex to run the pinned `v1.0` GitHub
+source through `uvx` or a temporary Python 3.11+ virtual environment. It does
+not alter the target project's environment.
 
-### Run the Workflow (Script Side)
+## Use
 
-From the skill directory:
-
-```bash
-cd desloppify-code-health-auditor
-```
-
-1) Profile the target repository:
-
-```bash
-python3 scripts/repo_profile.py /path/to/target-repo --out runs/profile.json
-```
-
-2) Generate grouped, non-clobbering tasks:
-
-```bash
-python3 scripts/grouped_subagent_plan.py \
-  --profile runs/profile.json \
-  --run-id run-001 \
-  --out runs/run-001/plan.json
-```
-
-3) Execute subagents per plan and write JSON arrays to:
-
-- `runs/run-001/findings/*.json`
-
-4) Validate subagent outputs:
-
-```bash
-python3 scripts/validate_findings.py runs/run-001/findings
-```
-
-5) Merge/deduplicate/score results:
-
-```bash
-python3 scripts/merge_and_score.py \
-  runs/run-001/findings \
-  --out runs/run-001/report.json
-```
-
-### Usage Example (Codex Prompt)
+Audit and report:
 
 ```text
-Use $desloppify-code-health-auditor to audit this repository and return a deduplicated, prioritized findings report.
+Use $desloppify to audit this repository and report its current code-health scores and next action.
 ```
 
-Prompt templates and detector snippets:
+Create a plan without code changes:
 
-- [`desloppify-code-health-auditor/references/grouped-subagent-prompts.md`](desloppify-code-health-auditor/references/grouped-subagent-prompts.md)
+```text
+Use $desloppify to scan this repository and create a prioritized cleanup plan. Do not edit production code.
+```
 
-## Where To Get Help
+Run an improvement cycle:
 
-- Open an issue in this repository: <https://github.com/davelindo/codex-skill-deslopify/issues>
-- Review the skill contract: [`desloppify-code-health-auditor/SKILL.md`](desloppify-code-health-auditor/SKILL.md)
-- Review prompt templates: [`desloppify-code-health-auditor/references/grouped-subagent-prompts.md`](desloppify-code-health-auditor/references/grouped-subagent-prompts.md)
+```text
+Use $desloppify to systematically improve this repository's strict score. Do not commit or push.
+```
 
-## Maintainers and Contributing
+Desloppify writes local state to `.desloppify/`. Keep that directory out of
+version control.
 
-Maintainer:
+## Runtime Contract
 
-- [@davelindo](https://github.com/davelindo)
+- Desloppify owns findings, state, queue order, resolution commands, and scores.
+- Skill release 1.0.0 embeds the exact Desloppify 1.0 support matrix: 8 full
+  plugins and 22 generic plugins. It performs no runtime registry-discovery
+  command.
+- Full plugins and reduced-depth generic plugins are reported separately,
+  including missing external tools and resulting coverage gaps.
+- Unsupported, ambiguous, and non-code repositories receive no health score.
+- Partial supported-language scans are never represented as whole-repository
+  scores.
+- Audits may write `.desloppify/` state but do not edit maintained source.
+- Cleanup code changes require an explicit cleanup or score-improvement request.
+- Commits, pushes, pull requests, published comments, accepted debt, and upstream
+  issue/PR creation require separate authorization.
+- Coherent polyglot applications use independent per-language state; unrelated
+  monorepo applications are scanned as separate projects.
+- Codex uses Desloppify's first-class review and triage runners instead of a
+  second subagent orchestration layer.
 
-Contributions are welcome via pull requests. To keep changes easy to review:
+## Upstream Maintenance
 
-1. Keep edits focused (skill spec, scripts, or references).
-2. Include a short rationale in the PR description.
-3. Run the script workflow locally on sample findings before opening the PR.
-4. Avoid committing generated `runs/` artifacts.
+This repository uses deliberate manual updates rather than automatic upstream
+mirroring. The current curated baseline is:
+
+- Skill release: `1.0.0`
+- Desloppify release: `1.0`
+- Upstream skill version: `7`
+- Last reviewed: `2026-08-22`
+
+When updating:
+
+1. Choose the exact Desloppify Git tag for the next skill release.
+2. Compare that tag's `docs/SKILL.md`, `docs/CODEX.md`, and `desloppify langs`
+   output with this skill.
+3. Update the embedded compatibility matrix, pinned installation URLs, and all
+   three version markers together.
+4. Preserve the authorization and audit/cleanup boundaries documented here.
+5. Run the validation and isolated CLI smoke tests below before tagging the
+   skill release.
+
+Do not run `desloppify setup` or `desloppify update-skill` against this
+repository; those commands can replace curated agent guidance.
+
+## Validate and Bundle
+
+Validate the skill with Codex's Skill Creator validator:
+
+```bash
+python3 "$CODEX_HOME/skills/.system/skill-creator/scripts/quick_validate.py" desloppify
+```
+
+The GitHub workflow checks the package structure and builds
+`dist/desloppify-skill-v1.0.0.zip`. For a runtime smoke test, resolve the pinned
+canonical tag in an isolated fixture and observe `scan`, `status`, and `next`
+before publishing a release.
+
+## Project Layout
+
+```text
+desloppify/
+|-- SKILL.md
+|-- agents/openai.yaml
+`-- references/recovery.md
+```
+
+The upstream project and CLI are maintained by
+[peteromallet/desloppify](https://github.com/peteromallet/desloppify).
