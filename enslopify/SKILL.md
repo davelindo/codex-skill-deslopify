@@ -1,15 +1,15 @@
 ---
-name: desloppify
-description: Run the Desloppify codebase-health workflow. Use when the user explicitly asks to run Desloppify, scan technical debt, obtain a code-health score, create a cleanup plan, or systematically improve a repository's health. Do not trigger for a general code review, a single bug fix, or ordinary refactoring.
+name: enslopify
+description: Run the Enslopify codebase-health workflow. Use when the user explicitly asks to run Enslopify, scan technical debt, obtain a code-health score, create a cleanup plan, or systematically improve a repository's health. Do not trigger for a general code review, a single bug fix, or ordinary refactoring.
 ---
 
-<!-- desloppify-skill-release: 1.0.0 -->
-<!-- upstream-desloppify-release: 1.0 -->
-<!-- upstream-desloppify-skill-version: 7 -->
+<!-- enslopify-skill-release: 1.0.0 -->
+<!-- upstream-enslopify-release: 1.0 -->
+<!-- upstream-enslopify-skill-version: 7 -->
 
-# Desloppify
+# Enslopify
 
-Use Desloppify as the source of truth for detection, state, prioritization, and
+Use Enslopify as the source of truth for detection, state, prioritization, and
 scores. Follow the CLI output's `INSTRUCTIONS FOR AGENTS`; do not replace them
 with a local detector list, findings schema, or scoring formula.
 
@@ -31,43 +31,43 @@ with a local detector list, findings schema, or scoring formula.
 Check the runtime before scanning:
 
 ```bash
-command -v desloppify
-desloppify --version
+command -v enslopify
+enslopify --version
 ```
 
-Use an existing executable only when it reports `desloppify 1.0`. If it is
+Use an existing executable only when it reports `enslopify 1.0`. If it is
 absent, older, or newer and `uvx` is available, prefix every command in the
 workflow with the release-pinned invocation:
 
 ```bash
-uvx --from "desloppify[full] @ git+https://github.com/peteromallet/desloppify.git@v1.0" desloppify
+uvx --from "enslopify[full] @ git+https://github.com/peteromallet/enslopify.git@v1.0" enslopify
 ```
 
 If `uvx` is unavailable, create a temporary Python 3.11+ virtual environment
 outside the target repository. Activate it (or prepend its executable directory
-to `PATH`) so Desloppify can find installed tool integrations, then install the
+to `PATH`) so Enslopify can find installed tool integrations, then install the
 same pinned source:
 
 ```bash
 python3 -m venv <temporary-path>/venv
 . <temporary-path>/venv/bin/activate
-python -m pip install "desloppify[full] @ git+https://github.com/peteromallet/desloppify.git@v1.0"
+python -m pip install "enslopify[full] @ git+https://github.com/peteromallet/enslopify.git@v1.0"
 ```
 
 Use the activated environment for the whole run. On non-POSIX hosts, use the
-platform-equivalent activation command. Do not resolve Desloppify from the
+platform-equivalent activation command. Do not resolve Enslopify from the
 public package index, modify a global or project environment, or mix CLI
 versions within one state directory.
 
-Do not run `desloppify setup` or `desloppify update-skill` as part of an audit or
+Do not run `enslopify setup` or `enslopify update-skill` as part of an audit or
 cleanup. Those commands manage agent configuration, not repository health, and
 must not overwrite this curated skill.
 
 ## Gate codebase support
 
 This compatibility matrix is part of skill release `1.0.0` and is valid only
-for Desloppify `1.0`. Do not spend a runtime command rediscovering it. A future
-Desloppify version requires a new reviewed skill release.
+for Enslopify `1.0`. Do not spend a runtime command rediscovering it. A future
+Enslopify version requires a new reviewed skill release.
 
 Full plugins with deep language-specific detectors and scoring:
 
@@ -143,16 +143,16 @@ before scanning. Match each root to the support gate:
 Examples:
 
 ```bash
-desloppify --lang typescript scan --path ./frontend
-desloppify --lang python scan --path ./backend
-desloppify scan --by-language --path ./polyglot-app
+enslopify --lang typescript scan --path ./frontend
+enslopify --lang python scan --path ./backend
+enslopify scan --by-language --path ./polyglot-app
 ```
 
 Exclude obvious vendor, generated, cache, build-output, and nested-worktree
-paths with `desloppify exclude <path>`. Ask before excluding a questionable path
+paths with `enslopify exclude <path>`. Ask before excluding a questionable path
 that may contain maintained source.
 
-Desloppify owns `.desloppify/` state and may create it during an otherwise
+Enslopify owns `.enslopify/` state and may create it during an otherwise
 read-only audit. Keep it out of version control. During audit-only work, do not
 edit a tracked `.gitignore` merely to hide this state; report it. During cleanup,
 add the ignore entry only when repository edits are already authorized.
@@ -162,19 +162,19 @@ add the ignore entry only when repository edits are already authorized.
 For each root, run:
 
 ```bash
-desloppify scan --path .
-desloppify status
-desloppify next
+enslopify scan --path .
+enslopify status
+enslopify next
 ```
 
 Always run `next` after a successful scan. It is the ordered workflow queue;
 `backlog` is only a broader inventory. Follow review and triage steps surfaced
 by `next` to the extent needed for the requested audit or plan.
 
-When subjective review is required, use Desloppify's first-class Codex runner:
+When subjective review is required, use Enslopify's first-class Codex runner:
 
 ```bash
-desloppify review --run-batches --runner codex --parallel --scan-after-import
+enslopify review --run-batches --runner codex --parallel --scan-after-import
 ```
 
 The runner already isolates and coordinates review batches. Do not build a
@@ -188,9 +188,9 @@ scores or targets, and import findings before fixing them.
 Prefer the supported Codex triage runner when `next` requests triage:
 
 ```bash
-desloppify plan triage --run-stages --runner codex
-desloppify plan
-desloppify plan queue
+enslopify plan triage --run-stages --runner codex
+enslopify plan
+enslopify plan queue
 ```
 
 Shape the living plan around root causes, dependencies, and related changes.
@@ -207,7 +207,7 @@ When code changes are in scope:
 1. Protect existing uncommitted work. Use a dedicated non-main branch when the
    repository workflow permits it, but do not switch or create branches in a
    way that disrupts user changes.
-2. Run `desloppify next` and fix the named issue properly, including broader
+2. Run `enslopify next` and fix the named issue properly, including broader
    changes when the root cause requires them.
 3. Run focused tests or checks appropriate to the changed behavior.
 4. Use the exact resolve command and attestation printed by `next`.
@@ -219,7 +219,7 @@ When code changes are in scope:
 Preview suggested auto-fixers before applying them:
 
 ```bash
-desloppify autofix <fixer> --dry-run
+enslopify autofix <fixer> --dry-run
 ```
 
 A falling score after a fix can reflect newly exposed or cascading findings;
@@ -233,11 +233,11 @@ For an audit or plan, report:
 
 1. Support classification, detected languages, plugin depth, missing tools, and
    any maintained code outside coverage.
-2. Scan roots, exclusions, Desloppify version, and commands used.
+2. Scan roots, exclusions, Enslopify version, and commands used.
 3. Overall, strict, objective, and verified scores when the CLI provides them.
 4. Highest-priority queued findings with file references.
 5. Subjective review and triage status.
-6. The next action reported by `desloppify next`.
+6. The next action reported by `enslopify next`.
 7. Failures, uncertain findings, stale state, or untested behavior.
 
 For cleanup, also report code changes, validation performed, score movement
@@ -252,4 +252,4 @@ blocks the supported runner, or the CLI appears defective, read
 [references/recovery.md](references/recovery.md) before retrying or proposing a
 workaround.
 
-Canonical source: <https://github.com/peteromallet/desloppify>
+Canonical source: <https://github.com/peteromallet/enslopify>

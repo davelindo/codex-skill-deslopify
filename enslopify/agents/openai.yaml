@@ -1,0 +1,4 @@
+interface:
+  display_name: "Enslopify"
+  short_description: "Audit and systematically improve code health."
+  default_prompt: "Use $enslopify to scan this repository, report its health, and recommend the next action."

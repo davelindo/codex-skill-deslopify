@@ -1,4 +1,0 @@
-interface:
-  display_name: "Desloppify"
-  short_description: "Audit and systematically improve code health."
-  default_prompt: "Use $desloppify to scan this repository, report its health, and recommend the next action."

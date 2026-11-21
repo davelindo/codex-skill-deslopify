@@ -8,13 +8,13 @@ on:
     tags:
       - "v*"
     paths:
-      - "desloppify/**"
+      - "enslopify/**"
       - ".github/workflows/bundle-skill.yml"
       - ".gitignore"
       - "README.md"
   pull_request:
     paths:
-      - "desloppify/**"
+      - "enslopify/**"
       - ".github/workflows/bundle-skill.yml"
       - ".gitignore"
       - "README.md"
@@ -24,7 +24,7 @@ permissions:
 
 env:
   SKILL_RELEASE: "1.0.0"
-  DESLOPPIFY_RELEASE: "1.0"
+  ENSLOPIFY_RELEASE: "1.0"
 
 jobs:
   bundle:
@@ -37,27 +37,27 @@ jobs:
       - name: Validate skill structure
         run: |
           set -euo pipefail
-          skill_file="desloppify/SKILL.md"
-          metadata_file="desloppify/agents/openai.yaml"
-          pinned_source="peteromallet/desloppify.git@v${DESLOPPIFY_RELEASE}"
+          skill_file="enslopify/SKILL.md"
+          metadata_file="enslopify/agents/openai.yaml"
+          pinned_source="peteromallet/enslopify.git@v${ENSLOPIFY_RELEASE}"
           test -f "$skill_file"
           test -f "$metadata_file"
-          test -f "desloppify/references/recovery.md"
-          test -z "$(git ls-files 'desloppify-code-health-auditor/**')"
-          test ! -d desloppify/scripts
-          test "$(sed -n '2p' "$skill_file")" = "name: desloppify"
+          test -f "enslopify/references/recovery.md"
+          test -z "$(git ls-files 'enslopify-code-health-auditor/**')"
+          test ! -d enslopify/scripts
+          test "$(sed -n '2p' "$skill_file")" = "name: enslopify"
           test "$(grep -Fc "$pinned_source" "$skill_file")" = "2"
-          grep -Fq 'Use $desloppify' "$metadata_file"
-          grep -Fq "<!-- desloppify-skill-release: ${SKILL_RELEASE} -->" "$skill_file"
-          grep -Fq "<!-- upstream-desloppify-release: ${DESLOPPIFY_RELEASE} -->" "$skill_file"
+          grep -Fq 'Use $enslopify' "$metadata_file"
+          grep -Fq "<!-- enslopify-skill-release: ${SKILL_RELEASE} -->" "$skill_file"
+          grep -Fq "<!-- upstream-enslopify-release: ${ENSLOPIFY_RELEASE} -->" "$skill_file"
 
       - name: Bundle skill
         run: |
           set -euo pipefail
           mkdir -p dist
-          zip -r "dist/desloppify-skill-v${SKILL_RELEASE}.zip" desloppify \
+          zip -r "dist/enslopify-skill-v${SKILL_RELEASE}.zip" enslopify \
             -x "*/.DS_Store" \
-            -x "*/.desloppify/*" \
+            -x "*/.enslopify/*" \
             -x "*/runs/*" \
             -x "*/__pycache__/*" \
             -x "*.pyc"
@@ -65,12 +65,12 @@ jobs:
       - name: Verify bundle contents
         run: |
           set -euo pipefail
-          bundle="dist/desloppify-skill-v${SKILL_RELEASE}.zip"
+          bundle="dist/enslopify-skill-v${SKILL_RELEASE}.zip"
           unzip -t "$bundle"
-          unzip -Z1 "$bundle" | grep -Fxq 'desloppify/SKILL.md'
-          unzip -Z1 "$bundle" | grep -Fxq 'desloppify/agents/openai.yaml'
-          unzip -Z1 "$bundle" | grep -Fxq 'desloppify/references/recovery.md'
-          if unzip -Z1 "$bundle" | grep -Eq '(^|/)(runs|scripts|\.desloppify|__pycache__)(/|$)|\.pyc$'; then
+          unzip -Z1 "$bundle" | grep -Fxq 'enslopify/SKILL.md'
+          unzip -Z1 "$bundle" | grep -Fxq 'enslopify/agents/openai.yaml'
+          unzip -Z1 "$bundle" | grep -Fxq 'enslopify/references/recovery.md'
+          if unzip -Z1 "$bundle" | grep -Eq '(^|/)(runs|scripts|\.enslopify|__pycache__)(/|$)|\.pyc$'; then
             echo "Bundle contains a forbidden runtime or legacy path."
             exit 1
           fi
@@ -79,7 +79,7 @@ jobs:
       - name: Upload bundle artifact
         uses: actions/upload-artifact@v7
         with:
-          name: desloppify-skill-v${{ env.SKILL_RELEASE }}
-          path: dist/desloppify-skill-v${{ env.SKILL_RELEASE }}.zip
+          name: enslopify-skill-v${{ env.SKILL_RELEASE }}
+          path: dist/enslopify-skill-v${{ env.SKILL_RELEASE }}.zip
           if-no-files-found: error
           retention-days: 14

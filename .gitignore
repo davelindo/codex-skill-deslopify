@@ -1,9 +1,9 @@
 .DS_Store
-.desloppify/
+.enslopify/
 dist/
 
 # Preserve untracked run data from checkouts of the retired pre-1.0 skill.
-desloppify-code-health-auditor/runs/
+enslopify-code-health-auditor/runs/
 
 __pycache__/
 *.pyc

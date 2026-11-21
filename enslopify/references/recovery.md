@@ -1,4 +1,4 @@
-# Desloppify Recovery
+# Enslopify Recovery
 
 Read this reference only after a workflow failure or a likely CLI defect. Keep
 the last known-good scan state and retry the smallest failed unit.
@@ -6,12 +6,12 @@ the last known-good scan state and retry the smallest failed unit.
 ## Failed review batches
 
 Review packets are immutable snapshots under
-`.desloppify/review_packets/holistic_packet_*.json`. Identify failed batch
+`.enslopify/review_packets/holistic_packet_*.json`. Identify failed batch
 indices from the runner output and retry only those slices:
 
 ```bash
-desloppify review --run-batches \
-  --packet .desloppify/review_packets/<packet>.json \
+enslopify review --run-batches \
+  --packet .enslopify/review_packets/<packet>.json \
   --only-batches <indices>
 ```
 
@@ -28,12 +28,12 @@ attested external import when the supported batch runner cannot complete.
 ## Stalled triage
 
 Automated triage artifacts live under
-`.desloppify/triage_runs/<timestamp>/`. Inspect `run.log` and
+`.enslopify/triage_runs/<timestamp>/`. Inspect `run.log` and
 `run_summary.json` to find the last confirmed stage. Re-run the automated
 command to resume, or retrieve the exact manual prompt for the failed stage:
 
 ```bash
-desloppify plan triage --stage-prompt <stage>
+enslopify plan triage --stage-prompt <stage>
 ```
 
 Do not restart completed stages or invent a replacement gate report.
@@ -42,7 +42,7 @@ Do not restart completed stages or invent a replacement gate report.
 
 The first-class Codex runner normally manages its own subprocess sandbox. If it
 cannot start because the host lacks required sandbox support, capture the exact
-failure first. `DESLOPPIFY_CODEX_SANDBOX` accepts `read-only`,
+failure first. `ENSLOPIFY_CODEX_SANDBOX` accepts `read-only`,
 `workspace-write`, or `danger-full-access`; use the last value only when the
 surrounding environment is already externally sandboxed and the user's scope
 permits it. Never weaken sandboxing merely to avoid diagnosing another failure.
@@ -65,4 +65,4 @@ For a crash, inconsistent state, or likely false positive:
 3. Use a workaround only when it preserves state and scoring integrity.
 4. File an issue or open a pull request only with explicit user authorization.
 
-Canonical source: <https://github.com/peteromallet/desloppify>
+Canonical source: <https://github.com/peteromallet/enslopify>
